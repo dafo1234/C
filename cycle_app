@@ -1,0 +1,44 @@
+import streamlit as st
+import datetime
+import pandas as pd
+import os
+
+st.title("📅 Calculateur de cycle menstruel")
+
+# Entrées utilisateur
+last_period = st.date_input("Date du premier jour des dernières règles")
+cycle_length = st.number_input("Durée moyenne du cycle (jours)", min_value=20, max_value=40, value=28)
+period_length = st.number_input("Durée moyenne des règles (jours)", min_value=3, max_value=10, value=5)
+
+# Calcul des dates clés
+next_period = last_period + datetime.timedelta(days=cycle_length)
+ovulation_day = last_period + datetime.timedelta(days=cycle_length - 14)
+
+st.subheader("Résultats estimés")
+st.write(f"📍 Prochain cycle : {next_period.strftime('%d %B %Y')}")
+st.write(f"🌸 Ovulation probable : {ovulation_day.strftime('%d %B %Y')}🌸")
+
+# Sauvegarde dans un CSV
+if st.button("💾 Sauvegarder ce cycle"):
+    data = {
+        "Date dernières règles": [last_period],
+        "Durée cycle (jours)": [cycle_length],
+        "Durée règles (jours)": [period_length],
+        "Prochain cycle": [next_period],
+        "Ovulation probable": [ovulation_day]
+    }
+    df = pd.DataFrame(data)
+
+    # Si le fichier existe déjà, on ajoute les nouvelles données
+    if os.path.exists("cycles.csv"):
+        df.to_csv("cycles.csv", mode="a", header=False, index=False)
+    else:
+        df.to_csv("cycles.csv", index=False)
+
+    st.success("Cycle sauvegardé avec succès 🎉")
+
+# Afficher l’historique
+if os.path.exists("cycles.csv"):
+    st.subheader("📖 Historique des cycles")
+    history = pd.read_csv("cycles.csv")
+    st.dataframe(history)
